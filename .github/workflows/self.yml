@@ -26,4 +26,4 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           add-assignees: false
       - name: Output CODEOWNERS
-        run: echo ${{ steps.codeowners.outputs.assignees }}
+        run: echo ${{ steps.codeowners.outputs.add-assignees }}
