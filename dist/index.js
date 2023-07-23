@@ -46,6 +46,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const codeowners_1 = __importDefault(__nccwpck_require__(9205));
 const github = __importStar(__nccwpck_require__(5438));
 function run() {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const filename = core.getInput('codewatchers-filename');
@@ -67,7 +68,14 @@ function run() {
             core.debug(`Mappings: ${JSON.stringify(Object.fromEntries(mappings))}`);
             const mappedAssignees = uniqueWatchers.map(watcher => { var _a; return (_a = mappings.get(watcher)) !== null && _a !== void 0 ? _a : watcher; });
             core.debug(`Mapped assignees: ${JSON.stringify(mappedAssignees)}`);
-            yield octokit.rest.issues.addAssignees(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, assignees: mappedAssignees }));
+            core.setOutput('assignees', (_a = mappedAssignees.join(',')) !== null && _a !== void 0 ? _a : '');
+            let addAssignees = true;
+            if (core.getInput('add-assignees', { required: true }) === 'false') {
+                addAssignees = false;
+            }
+            if (addAssignees) {
+                yield octokit.rest.issues.addAssignees(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, assignees: mappedAssignees }));
+            }
         }
         catch (error) {
             if (error instanceof Error)

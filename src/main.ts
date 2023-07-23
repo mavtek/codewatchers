@@ -43,12 +43,19 @@ async function run(): Promise<void> {
       watcher => mappings.get(watcher) ?? watcher
     )
     core.debug(`Mapped assignees: ${JSON.stringify(mappedAssignees)}`)
+    core.setOutput('assignees', mappedAssignees.join(',') ?? '')
 
-    await octokit.rest.issues.addAssignees({
-      ...github.context.repo,
-      issue_number: github.context.issue.number,
-      assignees: mappedAssignees
-    })
+    let addAssignees = true
+    if (core.getInput('add-assignees', {required: true}) === 'false') {
+      addAssignees = false
+    }
+    if (addAssignees) {
+      await octokit.rest.issues.addAssignees({
+        ...github.context.repo,
+        issue_number: github.context.issue.number,
+        assignees: mappedAssignees
+      })
+    }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
