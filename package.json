@@ -2,7 +2,7 @@
   "name": "codewatchers",
   "version": "0.0.0",
   "private": true,
-  "description": "CODEWATCHERS action",
+  "description": "MavTek CODEWATCHERS action",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
@@ -12,7 +12,7 @@
     "package": "ncc build --source-map --license licenses.txt",
     "all": "npm run build && npm run format && npm run lint && npm run package"
   },
-  "author": "Dovetail Research Pty Ltd",
+  "author": "MavTek Inc.",
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.10.0",

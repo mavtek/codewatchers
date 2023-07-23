@@ -46,6 +46,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const codeowners_1 = __importDefault(__nccwpck_require__(9205));
 const github = __importStar(__nccwpck_require__(5438));
 function run() {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const filename = core.getInput('codewatchers-filename');
@@ -55,19 +56,45 @@ function run() {
             core.debug(`Watchers: ${JSON.stringify(watchers.ownerEntries)}`);
             const githubToken = core.getInput('github-token', { required: true });
             const octokit = github.getOctokit(githubToken);
-            const changedFiles = yield octokit.rest.pulls.listFiles(Object.assign(Object.assign({}, github.context.repo), { pull_number: github.context.issue.number, per_page: 100 }));
-            core.debug(`Changed files: ${JSON.stringify(changedFiles.data.map(file => file.filename))}`);
-            const watchersForChangedFiles = changedFiles.data.flatMap(file => watchers.getOwner(file.filename));
-            const uniqueWatchers = [...new Set(watchersForChangedFiles)];
-            core.debug(`Filtered watchers: ${JSON.stringify(uniqueWatchers)}`);
-            // Set assignees
-            const mappings = new Map(core
-                .getMultilineInput('github-user-mappings')
-                .map(line => line.split(':')));
-            core.debug(`Mappings: ${JSON.stringify(Object.fromEntries(mappings))}`);
-            const mappedAssignees = uniqueWatchers.map(watcher => { var _a; return (_a = mappings.get(watcher)) !== null && _a !== void 0 ? _a : watcher; });
-            core.debug(`Mapped assignees: ${JSON.stringify(mappedAssignees)}`);
-            yield octokit.rest.issues.addAssignees(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, assignees: mappedAssignees }));
+            let changedFiles = undefined;
+            // if (github.context.eventName === 'push') {
+            //   changedFiles = await octokit.rest.repos.getCommit({
+            //     ...github.context.repo,
+            //     ref: github.context.sha,
+            //     per_page: 100
+            //   })
+            // } else
+            if (github.context.eventName === 'pull_request') {
+                changedFiles = yield octokit.rest.pulls.listFiles(Object.assign(Object.assign({}, github.context.repo), { pull_number: github.context.issue.number, per_page: 100 }));
+            }
+            else {
+                core.debug(`No changed files - can't handle ${github.context.eventName}`);
+                return;
+            }
+            if (changedFiles) {
+                core.debug(`Changed files: ${JSON.stringify(changedFiles.data.map(file => file.filename))}`);
+                const watchersForChangedFiles = changedFiles.data.flatMap(file => watchers.getOwner(file.filename));
+                const uniqueWatchers = [...new Set(watchersForChangedFiles)];
+                core.debug(`Filtered watchers: ${JSON.stringify(uniqueWatchers)}`);
+                // Set assignees
+                const mappings = new Map(core
+                    .getMultilineInput('github-user-mappings')
+                    .map(line => line.split(':')));
+                core.debug(`Mappings: ${JSON.stringify(Object.fromEntries(mappings))}`);
+                const mappedAssignees = uniqueWatchers.map(watcher => { var _a; return (_a = mappings.get(watcher)) !== null && _a !== void 0 ? _a : watcher; });
+                core.debug(`Mapped assignees: ${JSON.stringify(mappedAssignees)}`);
+                core.setOutput('assignees', (_a = mappedAssignees.join(',')) !== null && _a !== void 0 ? _a : '');
+                let addAssignees = true;
+                if (core.getInput('add-assignees', { required: true }) === 'false') {
+                    addAssignees = false;
+                }
+                if (addAssignees) {
+                    yield octokit.rest.issues.addAssignees(Object.assign(Object.assign({}, github.context.repo), { issue_number: github.context.issue.number, assignees: mappedAssignees }));
+                }
+            }
+            else {
+                core.debug(`No changed files - can't handle ${github.context.eventName}`);
+            }
         }
         catch (error) {
             if (error instanceof Error)
