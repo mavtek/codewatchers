@@ -1,9 +1,9 @@
 name: 'codewatchers-assignees'
 description: 'Set PR assignees based on a CODEOWNERS file'
-author: 'dovetail'
+author: 'mavtek'
 branding: 
   icon: 'users'
-  color: 'blue'
+  color: 'purple'
 inputs:
   github-token:
     required: true
@@ -15,6 +15,9 @@ inputs:
   github-user-mappings:
     required: false
     description: 'Optional list of mappings from codewatchers to github users. Delimited by colon.'
+  add-assignees:
+    required: false
+    description: 'Optional defaults to true, false to note add assignees'
 runs:
   using: 'node16'
   main: 'dist/index.js'
