@@ -19,5 +19,5 @@ inputs:
     required: false
     description: 'Optional defaults to true, false to note add assignees'
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'

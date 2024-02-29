@@ -14,19 +14,20 @@ async function run(): Promise<void> {
     const githubToken = core.getInput('github-token', {required: true})
     const octokit = github.getOctokit(githubToken)
     let changedFiles = undefined
-    // if (github.context.eventName === 'push') {
-    //   changedFiles = await octokit.rest.repos.getCommit({
-    //     ...github.context.repo,
-    //     ref: github.context.sha,
-    //     per_page: 100
-    //   })
-    // } else
-    if (github.context.eventName === 'pull_request') {
-      changedFiles = await octokit.rest.pulls.listFiles({
+    if (github.context.eventName === 'push') {
+      const commit = await octokit.rest.repos.getCommit({
+        ...github.context.repo,
+        ref: github.context.sha,
+        per_page: 100
+      })
+      changedFiles = commit.data.files
+    } else if (github.context.eventName === 'pull_request') {
+      const fileList = await octokit.rest.pulls.listFiles({
         ...github.context.repo,
         pull_number: github.context.issue.number,
         per_page: 100
       })
+      changedFiles = fileList.data
     } else {
       core.debug(`No changed files - can't handle ${github.context.eventName}`)
       return
@@ -34,11 +35,11 @@ async function run(): Promise<void> {
     if (changedFiles) {
       core.debug(
         `Changed files: ${JSON.stringify(
-          changedFiles.data.map(file => file.filename)
+          changedFiles.map(file => file.filename)
         )}`
       )
 
-      const watchersForChangedFiles = changedFiles.data.flatMap(file =>
+      const watchersForChangedFiles = changedFiles.flatMap(file =>
         watchers.getOwner(file.filename)
       )
       const uniqueWatchers = [...new Set(watchersForChangedFiles)]

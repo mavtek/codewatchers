@@ -57,23 +57,21 @@ function run() {
             const githubToken = core.getInput('github-token', { required: true });
             const octokit = github.getOctokit(githubToken);
             let changedFiles = undefined;
-            // if (github.context.eventName === 'push') {
-            //   changedFiles = await octokit.rest.repos.getCommit({
-            //     ...github.context.repo,
-            //     ref: github.context.sha,
-            //     per_page: 100
-            //   })
-            // } else
-            if (github.context.eventName === 'pull_request') {
-                changedFiles = yield octokit.rest.pulls.listFiles(Object.assign(Object.assign({}, github.context.repo), { pull_number: github.context.issue.number, per_page: 100 }));
+            if (github.context.eventName === 'push') {
+                const commit = yield octokit.rest.repos.getCommit(Object.assign(Object.assign({}, github.context.repo), { ref: github.context.sha, per_page: 100 }));
+                changedFiles = commit.data.files;
+            }
+            else if (github.context.eventName === 'pull_request') {
+                const fileList = yield octokit.rest.pulls.listFiles(Object.assign(Object.assign({}, github.context.repo), { pull_number: github.context.issue.number, per_page: 100 }));
+                changedFiles = fileList.data;
             }
             else {
                 core.debug(`No changed files - can't handle ${github.context.eventName}`);
                 return;
             }
             if (changedFiles) {
-                core.debug(`Changed files: ${JSON.stringify(changedFiles.data.map(file => file.filename))}`);
-                const watchersForChangedFiles = changedFiles.data.flatMap(file => watchers.getOwner(file.filename));
+                core.debug(`Changed files: ${JSON.stringify(changedFiles.map(file => file.filename))}`);
+                const watchersForChangedFiles = changedFiles.flatMap(file => watchers.getOwner(file.filename));
                 const uniqueWatchers = [...new Set(watchersForChangedFiles)];
                 core.debug(`Filtered watchers: ${JSON.stringify(uniqueWatchers)}`);
                 // Set assignees
