@@ -7,10 +7,8 @@ name: Check dist/
 
 on:
   push:
-    branches:
-      - main
-    paths-ignore:
-      - '**.md'
+    branches-ignore:
+      - main # we call this as a needs
   pull_request:
     paths-ignore:
       - '**.md'
