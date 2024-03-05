@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/mavtek/codewatchers/compare/v1.0.0...v1.0.1) (2024-03-05)
+
+
+### Bug Fixes
+
+* update dependencies en masse ([f63e6a1](https://github.com/mavtek/codewatchers/commit/f63e6a1d4ecd34f62f6f7190ef2bcc424666978c))
+
 ## 1.0.0 (2024-02-29)
 
 
